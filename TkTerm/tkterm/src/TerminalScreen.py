@@ -410,9 +410,9 @@ class TerminalWidget(tk.Frame):
 
         char = event.char
 
-        if self.terminalThread:
-            self.pendingKeys += char
-        elif char in list(string.printable):
+        # if self.terminalThread:
+        #     self.pendingKeys += char
+        if char in list(string.printable):
             self.pendingKeys = ""
             self.TerminalScreen.insert("insert", char)
             self.TerminalScreen.see(END)
@@ -485,6 +485,11 @@ class TerminalWidget(tk.Frame):
             # Attach outer class instance
             self.top = top
 
+
+        def send_input(self, msg):
+            self.process.stdin.write(msg)
+            self.process.stdin.flush()
+
         def run(self):
 
             # Modify shell executable based on selected shell combobox variable
@@ -508,7 +513,7 @@ class TerminalWidget(tk.Frame):
 
                         #     self.top.stdout.write(line, end='')
                         while True:
-                            c = self.process.stdout.readline()
+                            c = self.process.stdout.read(1)
                             if not c:
                                 break
                             self.top.stdout.write(c, end='')
@@ -579,6 +584,14 @@ class TerminalWidget(tk.Frame):
         pos_integral = str(pos).split('.')[0]
         offset = '.' + str(len(self.get_last_basename()))
         new_pos = pos_integral + offset
+
+        return new_pos
+
+    def get_pos_after_last_line(self):
+        """ Return starting position of the last line """
+
+        pos = get_last_line(self.TerminalScreen)
+        return pos
 
         return new_pos
 
@@ -766,6 +779,10 @@ class TerminalWidget(tk.Frame):
 
                 self.count = 0
                 self.unbind_keys()
+
+                self.TerminalScreen.bind("<Return>", lambda event: self.terminalThread.send_input(
+                    self.TerminalScreen.get(self.get_pos_after_last_line(), "end-1c") + "\n"
+                ))
                 self.monitor(self.terminalThread)
 
 
