@@ -1,28 +1,41 @@
 import ctypes
 from tkinter import *
-from tkterm import Terminal
 import os
-
-# Load the shared library
-libshell = ctypes.CDLL('./libshell.so')
-libshell.execute_command.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
-
-BUFFER_SIZE = 1024
-
-def execute_command():
-    command = terminal.get_command()
-    output = ctypes.create_string_buffer(BUFFER_SIZE)
-    libshell.execute_command(command.encode('utf-8'), output)
-    terminal.write(output.value.decode('utf-8'))
+import sys
+sys.path.insert(0, "./TkTerm")
+from tkterm import Terminal
 
 root = Tk()
-root.title("Shell")
+# Hide root window during initialization
+root.withdraw()
 
-terminal = Terminal(root)
-# change the execute_command function to the one defined above
-terminal.execute_command = execute_command
+# Set title
+root.title("Terminal")
 
-terminal.pack(fill=BOTH, expand=True)
+# Create terminal
+term = Terminal(root)
+term.pack(expand=True, fill="both")
 
+# Set minimum size and center app
+
+# Update widgets so minimum size is accurate
+root.update_idletasks()
+
+# Get minimum size
+minimum_width: int = 800
+minimum_height: int = 600
+
+# Get center of screen based on minimum size
+x_coords = int(root.winfo_screenwidth() / 2 - minimum_width / 2)
+y_coords = int(root.wm_maxsize()[1] / 2 - minimum_height / 2)
+
+# Place app and make the minimum size the actual minimum size (non-infringable)
+root.geometry(f"{minimum_width}x{minimum_height}+{x_coords}+{y_coords}")
+root.wm_minsize(minimum_width, minimum_height)
+
+
+# Show root window
+root.deiconify()
+
+# Start mainloop
 root.mainloop()
-
