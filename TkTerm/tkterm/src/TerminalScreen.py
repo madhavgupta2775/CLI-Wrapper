@@ -378,6 +378,50 @@ class TerminalWidget(tk.Frame):
         self.TerminalScreen.bind("<Tab>",               lambda event: "break")
         self.TerminalScreen.bind("<Home>",              lambda event: "break")
         self.TerminalScreen.bind("<B1-Motion>",         lambda event: "break")
+        
+    def input_bind_keys(self):
+        # self.TerminalScreen.bind("<Return>",            self.do_keyReturn)
+        # self.TerminalScreen.bind("<Up>",                self.do_keyUpArrow)
+        # self.TerminalScreen.bind("<Down>",              self.do_keyDownArrow)
+        self.TerminalScreen.bind("<BackSpace>",         self.input_do_keyBackspace)
+        self.TerminalScreen.bind("<Delete>",            lambda event: "")
+        self.TerminalScreen.bind("<End>",               lambda event: "")
+        # self.TerminalScreen.bind("<Left>",              self.do_keyLeftArrow)
+        self.TerminalScreen.bind("<Right>",             lambda event: "")
+        self.TerminalScreen.bind("<Button-1>",          self.do_leftClick)
+        self.TerminalScreen.bind("<ButtonRelease-1>",   self.do_leftClickRelease)
+        self.TerminalScreen.bind("<ButtonRelease-2>",   self.do_middleClickRelease)
+        # self.TerminalScreen.bind("<Tab>",               self.do_keyTab)
+        # self.TerminalScreen.bind("<Home>",              self.do_keyHome)
+        
+    def input_unbind_keys(self):
+        # self.TerminalScreen.bind("<Return>",            lambda event: "break")
+        # self.TerminalScreen.bind("<Up>",                lambda event: "break")
+        # self.TerminalScreen.bind("<Down>",              lambda event: "break")
+        self.TerminalScreen.bind("<BackSpace>",         lambda event: "break")
+        self.TerminalScreen.bind("<Delete>",            lambda event: "break")
+        self.TerminalScreen.bind("<End>",               lambda event: "break")
+        # self.TerminalScreen.bind("<Left>",              lambda event: "break")
+        self.TerminalScreen.bind("<Right>",             lambda event: "break")
+        self.TerminalScreen.bind("<Button-1>",          lambda event: "break")
+        self.TerminalScreen.bind("<ButtonRelease-1>",   lambda event: "break")
+        self.TerminalScreen.bind("<ButtonRelease-2>",   lambda event: "break")
+        # self.TerminalScreen.bind("<Tab>",               lambda event: "break")
+        # self.TerminalScreen.bind("<Home>",              lambda event: "break")
+        
+    def input_do_keyBackspace(self, *args):
+        """ Delete a character until input start """
+        
+        index = self.TerminalScreen.index("insert-1c")
+        
+        if self.input_size > 0:
+            self.TerminalScreen.delete(index)
+            self.input_size -= 1
+        
+        if self.input_size == 0:
+            self.input_unbind_keys()
+        
+        return "break"
 
     def rollWheel(self, event):
         direction = 0
@@ -420,7 +464,10 @@ class TerminalWidget(tk.Frame):
             self.TerminalScreen.insert("insert", char)
             self.TerminalScreen.see(END)
             if self.terminalThread:
+                # print(char)
                 self.input_size += 1
+                if self.input_size == 1:
+                    self.input_bind_keys()
 
         return "break"
 
@@ -709,6 +756,9 @@ class TerminalWidget(tk.Frame):
         # print(self.input_size)
         # print(input_str)
         
+        self.input_size = 0
+        self.input_unbind_keys()
+                
         return input_str
 
     def do_keyReturn(self, *args):
