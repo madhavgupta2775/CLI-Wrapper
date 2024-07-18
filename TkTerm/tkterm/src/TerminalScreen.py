@@ -759,8 +759,8 @@ class TerminalWidget(tk.Frame):
         
         # last input_size characters
         input_str = input_str[-self.input_size:] + "\n"
-        print(self.input_size)
-        print(input_str)
+        # print(self.input_size)
+        # print(input_str)
         
         self.input_size = 0
         self.input_unbind_keys()
