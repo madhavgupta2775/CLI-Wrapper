@@ -186,6 +186,9 @@ class TerminalWidget(tk.Frame):
 
         # Automatically set focus to Terminal screen when initialised
         self.TerminalScreen.focus_set()
+        
+        # input start position tracking
+        self.input_size = 0
 
     def terminate(self):
         """ Terminate this terminal instance """
@@ -416,6 +419,8 @@ class TerminalWidget(tk.Frame):
             self.pendingKeys = ""
             self.TerminalScreen.insert("insert", char)
             self.TerminalScreen.see(END)
+            if self.terminalThread:
+                self.input_size += 1
 
         return "break"
 
@@ -593,8 +598,6 @@ class TerminalWidget(tk.Frame):
         pos = get_last_line(self.TerminalScreen)
         return pos
 
-        return new_pos
-
     def get_cmd(self):
         """ Return command after the basename """
 
@@ -696,6 +699,17 @@ class TerminalWidget(tk.Frame):
         # self.TerminalScreen.mark_set("insert", self.insertionIndex)
         # return "break"
         pass
+    
+    def parse_input(self):
+        input_str = self.TerminalScreen.get(self.get_pos_after_last_line(), "end-1c")
+        # print(input_str)
+        
+        # last input_size characters
+        input_str = input_str[-self.input_size:] + "\n"
+        # print(self.input_size)
+        # print(input_str)
+        
+        return input_str
 
     def do_keyReturn(self, *args):
         """ On pressing Return, execute the command """
@@ -780,9 +794,15 @@ class TerminalWidget(tk.Frame):
                 self.count = 0
                 self.unbind_keys()
 
+                # self.TerminalScreen.bind("<Return>", lambda event: self.terminalThread.send_input(
+                #     self.TerminalScreen.get(self.get_pos_after_last_line(), "end-1c") + "\n"
+                # ))
+                
                 self.TerminalScreen.bind("<Return>", lambda event: self.terminalThread.send_input(
-                    self.TerminalScreen.get(self.get_pos_after_last_line(), "end-1c") + "\n"
+                    self.parse_input()
                 ))
+                    
+                
                 self.monitor(self.terminalThread)
 
 
