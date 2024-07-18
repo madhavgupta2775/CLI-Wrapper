@@ -76,6 +76,9 @@ class RightClickContextMenu:
 
         current_pos = self.terminal.TerminalScreen.index(INSERT)
         self.terminal.TerminalScreen.insert(current_pos, data)
+        
+        if self.terminal.terminalThread:
+            self.terminal.input_size += len(data)
 
     def _reloadScreen(self):
         self.terminal.clear_screen()

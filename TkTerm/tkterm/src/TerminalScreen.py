@@ -380,6 +380,7 @@ class TerminalWidget(tk.Frame):
         self.TerminalScreen.bind("<B1-Motion>",         lambda event: "break")
         
     def input_bind_keys(self):
+        self.TerminalScreen.bind("<FocusOut>",          self.focus_out)
         # self.TerminalScreen.bind("<Return>",            self.do_keyReturn)
         # self.TerminalScreen.bind("<Up>",                self.do_keyUpArrow)
         # self.TerminalScreen.bind("<Down>",              self.do_keyDownArrow)
@@ -393,6 +394,7 @@ class TerminalWidget(tk.Frame):
         self.TerminalScreen.bind("<ButtonRelease-2>",   self.do_middleClickRelease)
         # self.TerminalScreen.bind("<Tab>",               self.do_keyTab)
         # self.TerminalScreen.bind("<Home>",              self.do_keyHome)
+        self.TerminalScreen.unbind("<B1-Motion>")
         
     def input_unbind_keys(self):
         # self.TerminalScreen.bind("<Return>",            lambda event: "break")
@@ -408,6 +410,7 @@ class TerminalWidget(tk.Frame):
         self.TerminalScreen.bind("<ButtonRelease-2>",   lambda event: "break")
         # self.TerminalScreen.bind("<Tab>",               lambda event: "break")
         # self.TerminalScreen.bind("<Home>",              lambda event: "break")
+        self.TerminalScreen.bind("<B1-Motion>",         lambda event: "break")
         
     def input_do_keyBackspace(self, *args):
         """ Delete a character until input start """
@@ -751,10 +754,13 @@ class TerminalWidget(tk.Frame):
         input_str = self.TerminalScreen.get(self.get_pos_after_last_line(), "end-1c")
         # print(input_str)
         
+        if self.input_size == 0:
+            return "\n"
+        
         # last input_size characters
         input_str = input_str[-self.input_size:] + "\n"
-        # print(self.input_size)
-        # print(input_str)
+        print(self.input_size)
+        print(input_str)
         
         self.input_size = 0
         self.input_unbind_keys()
