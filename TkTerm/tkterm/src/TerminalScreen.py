@@ -20,6 +20,9 @@ from .Config import TkTermConfig
 from .Interpreter import Interpreter
 from .Redirect import Redirect
 from backend.KThread import KThread
+from backend.llm import LLMAnalyzer
+from transformers import pipeline
+
 
 import traceback
 
@@ -31,6 +34,7 @@ class TerminalWidget(tk.Frame):
         tk.Frame.__init__(self, parent, **kwargs)
 
         self.parent = parent
+        self.llm_analyzer = LLMAnalyzer()
 
         self.basename = ""
         self.commandIndex = -1
@@ -807,6 +811,35 @@ class TerminalWidget(tk.Frame):
 
         # Valid command
         else:
+            if cmd.startswith('aws'):
+                analysis_dict = self.llm_analyzer.analyze_command(cmd)
+            
+                risk_level = analysis_dict.get("risk_level")
+                explanation = "\n".join(analysis_dict.get("explanation", []))
+                suggested_safe_command = analysis_dict.get("suggested_safe_command")
+                
+                if risk_level == "High":
+                    print("Command execution blocked due to high risk.\n")
+                    print("Detailed Explanation:\n", explanation)
+                    print("Suggested Safe Command:\n", suggested_safe_command)
+                    print("\nOptions:")
+                    print("- Execute the safe command.")
+                    print("- Abort the command execution.")
+                    
+                elif risk_level == "Medium":
+                    print("Command has medium risk. Proceed with caution.\n")
+                    print("Detailed Explanation:\n", explanation)
+                    print("Suggested Safe Command:\n", suggested_safe_command)
+                    print("\nOptions:")
+                    print("- Proceed with the original command.")
+                    print("- Execute the suggested safe command.")
+                    print("- Abort the command execution.")
+                    
+                elif risk_level == "Low":
+                    print("Command is considered safe. Proceeding with execution.\n")
+                # Here you can add logic to execute the command or simply inform the user
+                    print("Executing command:", cmd)
+
 
             # Add to command history
             if cmd in self.commandHistory:
@@ -863,6 +896,8 @@ class TerminalWidget(tk.Frame):
 
 
         return 'break'
+
+
 
     def do_keyBackspace(self, *args):
         """ Delete a character until the basename """
