@@ -812,34 +812,34 @@ class TerminalWidget(tk.Frame):
         # Valid command
         else:
             if cmd.startswith('aws'):
+        # Analyze the AWS command using the LLMAnalyzer
                 analysis_dict = self.llm_analyzer.analyze_command(cmd)
-            
+
                 risk_level = analysis_dict.get("risk_level")
                 explanation = "\n".join(analysis_dict.get("explanation", []))
                 suggested_safe_command = analysis_dict.get("suggested_safe_command")
-                
-                if risk_level == "High":
-                    print("Command execution blocked due to high risk.\n")
-                    print("Detailed Explanation:\n", explanation)
-                    print("Suggested Safe Command:\n", suggested_safe_command)
-                    print("\nOptions:")
-                    print("- Execute the safe command.")
-                    print("- Abort the command execution.")
-                    
-                elif risk_level == "Medium":
-                    print("Command has medium risk. Proceed with caution.\n")
-                    print("Detailed Explanation:\n", explanation)
-                    print("Suggested Safe Command:\n", suggested_safe_command)
-                    print("\nOptions:")
-                    print("- Proceed with the original command.")
-                    print("- Execute the suggested safe command.")
-                    print("- Abort the command execution.")
-                    
-                elif risk_level == "Low":
-                    print("Command is considered safe. Proceeding with execution.\n")
-                # Here you can add logic to execute the command or simply inform the user
-                    print("Executing command:", cmd)
 
+                if risk_level == "High":
+                    self.stdout.write("Command execution blocked due to high risk.\n")
+                    self.stdout.write("Detailed Explanation:\n" + explanation + "\n")
+                    self.stdout.write("Suggested Safe Command:\n" + suggested_safe_command + "\n")
+                    self.stdout.write("\nOptions:\n")
+                    self.stdout.write("- Execute the safe command.\n")
+                    self.stdout.write("- Abort the command execution.\n")
+
+                elif risk_level == "Medium":
+                    self.stdout.write("Command has medium risk. Proceed with caution.\n")
+                    self.stdout.write("Detailed Explanation:\n" + explanation + "\n")
+                    self.stdout.write("Suggested Safe Command:\n" + suggested_safe_command + "\n")
+                    self.stdout.write("\nOptions:\n")
+                    self.stdout.write("- Proceed with the original command.\n")
+                    self.stdout.write("- Execute the suggested safe command.\n")
+                    self.stdout.write("- Abort the command execution.\n")
+
+                elif risk_level == "Low":
+                    self.stdout.write("Command is considered safe. Proceeding with execution.\n")
+                    # Here you can add logic to execute the command or simply inform the user
+                    self.stdout.write("Executing command: " + cmd + "\n")
 
             # Add to command history
             if cmd in self.commandHistory:
