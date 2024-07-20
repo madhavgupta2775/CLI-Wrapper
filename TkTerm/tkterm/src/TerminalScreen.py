@@ -820,7 +820,7 @@ class TerminalWidget(tk.Frame):
                 suggested_safe_command = analysis_dict.get("suggested_safe_command")
 
                 if risk_level == "High":
-                    self.stdout.write("Command execution blocked due to high risk.\n")
+                    self.stdout.write("\nCommand execution blocked due to high risk.\n")
                     self.stdout.write("Detailed Explanation:\n" + explanation + "\n")
                     self.stdout.write("Suggested Safe Command:\n" + suggested_safe_command + "\n")
                     self.stdout.write("\nOptions:\n")
@@ -828,7 +828,7 @@ class TerminalWidget(tk.Frame):
                     self.stdout.write("- Abort the command execution.\n")
 
                 elif risk_level == "Medium":
-                    self.stdout.write("Command has medium risk. Proceed with caution.\n")
+                    self.stdout.write("\nCommand has medium risk. Proceed with caution.\n")
                     self.stdout.write("Detailed Explanation:\n" + explanation + "\n")
                     self.stdout.write("Suggested Safe Command:\n" + suggested_safe_command + "\n")
                     self.stdout.write("\nOptions:\n")
@@ -837,7 +837,7 @@ class TerminalWidget(tk.Frame):
                     self.stdout.write("- Abort the command execution.\n")
 
                 elif risk_level == "Low":
-                    self.stdout.write("Command is considered safe. Proceeding with execution.\n")
+                    self.stdout.write("\nCommand is considered safe. Proceeding with execution.\n")
                     # Here you can add logic to execute the command or simply inform the user
                     self.stdout.write("Executing command: " + cmd + "\n")
 
