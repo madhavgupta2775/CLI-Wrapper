@@ -5,7 +5,11 @@ import os
 class LLMAnalyzer:
     def __init__(self):
         # Initialize the Groq client with your API key
+<<<<<<< HEAD
         self.client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+=======
+        self.client = Groq(api_key='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')
+>>>>>>> 54a9909 (v2)
 
     def analyze_command(self, cmd):
         """

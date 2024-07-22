@@ -22,6 +22,8 @@ from .Redirect import Redirect
 from backend.KThread import KThread
 from backend.llm import LLMAnalyzer
 from transformers import pipeline
+from backend.aws_fetcher import AWSResourceFetcher
+
 
 
 import traceback
@@ -39,6 +41,8 @@ class TerminalWidget(tk.Frame):
         self.basename = ""
         self.commandIndex = -1
         self.commandHistory = []
+        self.aws_fetcher = AWSResourceFetcher()
+
 
         # get the root after
         self.after = self.winfo_toplevel().after
@@ -812,9 +816,8 @@ class TerminalWidget(tk.Frame):
         # Valid command
         else:
             if cmd.startswith('aws'):
-        # Analyze the AWS command using the LLMAnalyzer
                 analysis_dict = self.llm_analyzer.analyze_command(cmd)
-
+                
                 risk_level = analysis_dict.get("risk_level")
                 explanation = "\n".join(analysis_dict.get("explanation", []))
                 suggested_safe_command = analysis_dict.get("suggested_safe_command")
@@ -824,23 +827,46 @@ class TerminalWidget(tk.Frame):
                     self.stdout.write("Detailed Explanation:\n" + explanation + "\n")
                     self.stdout.write("Suggested Safe Command:\n" + suggested_safe_command + "\n")
                     self.stdout.write("\nOptions:\n")
-                    self.stdout.write("- Execute the safe command.\n")
-                    self.stdout.write("- Abort the command execution.\n")
-
+                    self.stdout.write("1. Execute the safe command.\n")
+                    self.stdout.write("2. Abort the command execution.\n")
+                    user_choice = int(input("Enter your choice: ").strip())
+                    if user_choice == 1:
+                        suggested_safe_command = self.handle_safe_command(suggested_safe_command)
+                        self.execute_command(suggested_safe_command)
+                    else:
+                        self.stdout.write("Command execution aborted.\n")
                 elif risk_level == "Medium":
                     self.stdout.write("\nCommand has medium risk. Proceed with caution.\n")
                     self.stdout.write("Detailed Explanation:\n" + explanation + "\n")
                     self.stdout.write("Suggested Safe Command:\n" + suggested_safe_command + "\n")
                     self.stdout.write("\nOptions:\n")
-                    self.stdout.write("- Proceed with the original command.\n")
-                    self.stdout.write("- Execute the suggested safe command.\n")
-                    self.stdout.write("- Abort the command execution.\n")
-
+                    self.stdout.write("1. Proceed with the original command.\n")
+                    self.stdout.write("2. Execute the suggested safe command.\n")
+                    self.stdout.write("3. Abort the command execution.\n")
+                    user_choice = int(input("Enter your choice: ").strip())
+                    if user_choice == "1":
+                        try:
+                            result = subprocess.run(cmd, shell=True, text=True, capture_output=True)
+                            self.stdout.write(result.stdout)
+                            if result.stderr:
+                                self.stdout.write(result.stderr)
+                        except Exception as e:
+                            self.stdout.write(f"Error executing command: {e}\n")
+                    elif user_choice == "2":
+                        try:
+                            result = subprocess.run(suggested_safe_command, shell=True, text=True, capture_output=True)
+                            self.stdout.write(result.stdout)
+                            if result.stderr:
+                                self.stdout.write(result.stderr)
+                        except Exception as e:
+                            self.stdout.write(f"Error executing command: {e}\n")
+                    else:
+                        self.stdout.write("Command execution aborted.\n")
                 elif risk_level == "Low":
-                    self.stdout.write("\nCommand is considered safe. Proceeding with execution.\n")
-                    # Here you can add logic to execute the command or simply inform the user
-                    self.stdout.write("Executing command: " + cmd + "\n")
+                    self.stdout.write("Command is considered safe. Proceeding with execution.\n")
+                    self.execute_command(cmd)
 
+                
             # Add to command history
             if cmd in self.commandHistory:
                 self.commandHistory.pop(self.commandIndex)
@@ -991,3 +1017,41 @@ class TerminalWidget(tk.Frame):
 
         self.stdout.write(cmd, end='')
         self.do_keyReturn()
+
+    def handle_safe_command(self, command):
+                    if 'instance-name' in command:
+                        instance_names = self.aws_fetcher.get_instance_names()
+                        command = self.prompt_user_to_select(instance_names, 'instance-name', command)
+                    if 'instance-id' in command:
+                        instance_ids = self.aws_fetcher.get_instance_ids()
+                        command = self.prompt_user_to_select(instance_ids, 'instance-id', command)
+                    if 'bucket' in command:
+                        bucket_names = self.aws_fetcher.get_bucket_names()
+                        command = self.prompt_user_to_select(bucket_names, 'bucket', command)
+                    return command
+
+    def prompt_user_to_select(self, options, resource_type, command):
+        self.stdout.write(f"Please select a {resource_type} from the following options:\n")
+        for i, option in enumerate(options, 1):
+            self.stdout.write(f"{i}. {option}\n")
+        user_choice = int(input(f"Enter the number of your choice for {resource_type}: ").strip())
+        selected_option = options[user_choice - 1]
+        return command.replace(resource_type, selected_option)
+
+    def execute_command(self, command):
+        try:
+            # Execute the command using subprocess.run, capturing stdout and stderr
+            result = subprocess.run(command, shell=True, check=True, text=True, capture_output=True)
+            
+            # Print the command being executed
+            self.stdout.write(f"Executing command: {command}\n")
+            
+            # Print the command's output
+            self.stdout.write(result.stdout)
+            
+            # Optionally, print the command's stderr if there was an error
+            if result.stderr:
+                self.stdout.write(f"Error executing command:\n{result.stderr}")
+        except subprocess.CalledProcessError as e:
+            # Handle errors during command execution
+            self.stdout.write(f"Command execution failed with error:\n{e.stderr}")
